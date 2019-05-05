@@ -8,7 +8,7 @@
 
 import UIKit
 
- @objcMembers class ViewController: UIViewController, UIImagePickerControllerDelegate,UINavigationControllerDelegate, UITextFieldDelegate {
+ @objcMembers class EdidMememeController: UIViewController, UIImagePickerControllerDelegate,UINavigationControllerDelegate, UITextFieldDelegate {
     
     @IBOutlet weak var imagePickerView: UIImageView!
     @IBOutlet weak var cameraButton: UIBarButtonItem!
@@ -17,6 +17,13 @@ import UIKit
     @IBOutlet weak var navBar: UINavigationBar!
     @IBOutlet weak var toolBar: UIToolbar!
     @IBOutlet weak var shareButton: UIBarButtonItem!
+    
+    let textAttributes : [NSAttributedString.Key : Any] = [
+        .strokeColor: UIColor.black,
+        .foregroundColor: UIColor.white,
+        .font: UIFont(name: "HelveticaNeue-CondensedBlack", size: 40)!,
+        .strokeWidth: -4.0
+    ]
     
     @IBAction func pickAnImageFromAlbum(_ sender: Any) {
         pickAnImage(Any.self, sourceType: .photoLibrary)
@@ -78,8 +85,8 @@ import UIKit
         if let pickedImage = info[UIImagePickerController.InfoKey.originalImage] as? UIImage {
             imagePickerView.contentMode = .scaleAspectFit
             imagePickerView.image = pickedImage
+            shareButton.isEnabled = true
         }
-        shareButton.isEnabled = true
         dismiss(animated:true, completion: nil)
     }
     
@@ -89,12 +96,10 @@ import UIKit
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         
-        textField.resignFirstResponder()
+        return textField.resignFirstResponder()
         
-        return true
     }
 
-    
     private func pickAnImage(_ sender: Any, sourceType: UIImagePickerController.SourceType ) {
         let imagePicker = UIImagePickerController()
         imagePicker.sourceType = sourceType
@@ -103,14 +108,10 @@ import UIKit
     }
     
     private func formatTextField(textField: UITextField, defaultText: String){
-        textField.textAlignment = .center
         textField.becomeFirstResponder()
         textField.delegate = self
-        textField.defaultTextAttributes = [
-            NSAttributedString.Key.strokeColor: UIColor.black,
-            NSAttributedString.Key.foregroundColor : UIColor.white,
-            NSAttributedString.Key.font: UIFont(name: "HelveticaNeue-CondensedBlack", size: 40)!,
-            NSAttributedString.Key.strokeWidth: 1]
+        textField.defaultTextAttributes = textAttributes
+        textField.textAlignment = .center
         formatPlaceHolder(textField: textField, defaultText: defaultText)
        
     }
@@ -122,9 +123,14 @@ import UIKit
                                                              attributes: [NSAttributedString.Key.strokeColor: UIColor.black,
                                                                           NSAttributedString.Key.foregroundColor: UIColor.white,
                                                                           NSAttributedString.Key.font: UIFont(name: "HelveticaNeue-CondensedBlack", size: 40)!,
-                                                                          NSAttributedString.Key.strokeWidth: 1,
+                                                                          NSAttributedString.Key.strokeWidth: -4,
                                                                           NSAttributedString.Key.paragraphStyle: paragraph
             ])
+    }
+    
+    private func hideToolbars(_ hide: Bool) {
+        navBar.isHidden = hide
+        toolBar.isHidden = hide
     }
     
    func subscribeToKeyboardNotifications() {
@@ -143,7 +149,9 @@ import UIKit
     
     func keyboardWillShow(_ notification:Notification) {
         
-        view.frame.origin.y -= getKeyboardHeight(notification)
+        if (bottomTextField.isEditing){
+            view.frame.origin.y -= getKeyboardHeight(notification)
+        }
     }
     
     func keyboardWillHide(_ notification:Notification) {
@@ -165,8 +173,7 @@ import UIKit
     
     func generateMemedImage() -> UIImage {
         
-        navBar.isHidden = true
-        toolBar.isHidden = true
+        hideToolbars(true)
         
         // Render view to an image
         UIGraphicsBeginImageContext(self.view.frame.size)
@@ -174,8 +181,7 @@ import UIKit
         let memedImage:UIImage = UIGraphicsGetImageFromCurrentImageContext()!
         UIGraphicsEndImageContext()
         
-        navBar.isHidden = false
-        toolBar.isHidden = false
+        hideToolbars(false)
         
         return memedImage
     }
